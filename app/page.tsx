@@ -2,44 +2,45 @@
 
 import { useState } from "react";
 
-const menu = {
-  desayunos: ["Tostada de aguacate · 6,50€", "Porridge de frutos rojos · 5,50€", "Huevos benedict · 9,90€", "Croissant artesano · 2,50€"],
-  brunch: ["New Yorker · 8,40€", "Higo Chungo · 10,90€", "Pikito · 12,90€", "Aguacatado · 9,90€"],
-  bebidas: ["Flat white · 3€", "Matcha latte · 4€", "Smoothie de fresa · 3,80€", "Cold brew · 3€"],
-};
+const categories = [
+  ["Novedades", "✦"], ["Entrantes", "🥑"], ["Brunch", "🍞"], ["Bocadillos", "🥪"],
+  ["Bowls", "🥗"], ["Dulces", "🍰"], ["Cafés", "☕"], ["Smoothies", "🍓"], ["Bebidas", "🍹"],
+] as const;
+
+const products = [
+  { name: "New York", category: "Brunch", description: "Pan integral, huevo, aguacate, salmón y salsa de yogur.", price: 8.4, image: "/menu/sandwiches.jpeg" },
+  { name: "Higo Chungo", category: "Brunch", description: "Pan brioche, yogur, higos, frutos rojos y miel.", price: 11.9, image: "/menu/smoothies.jpeg" },
+  { name: "Pikito", category: "Brunch", description: "Huevos, champiñones, queso parmesano y pan de masa madre.", price: 12.9, image: "/menu/entrantes.jpeg" },
+  { name: "Aguacatado", category: "Entrantes", description: "Aguacate, huevo, queso cottage, tomate y AOVE.", price: 9.9, image: "/menu/entrantes.jpeg" },
+  { name: "Tostada de aguacate", category: "Entrantes", description: "Pan artesano, aguacate, semillas y aceite de oliva.", price: 6.5, image: "/menu/cafe.jpeg" },
+  { name: "Porridge de frutos rojos", category: "Bowls", description: "Avena cremosa, fruta fresca, granola y miel.", price: 5.5, image: "/menu/smoothies.jpeg" },
+  { name: "Café de especialidad", category: "Cafés", description: "Espresso, leche cremosa y el origen que prefieras.", price: 3.2, image: "/menu/cafe.jpeg" },
+  { name: "Smoothie de fresa", category: "Smoothies", description: "Fresa, plátano y fruta variada.", price: 3.8, image: "/menu/smoothies.jpeg" },
+];
+
+type CartItem = (typeof products)[number] & { quantity: number };
 
 export default function Home() {
-  const [active, setActive] = useState<keyof typeof menu>("desayunos");
-  return (
-    <main>
-      <nav className="nav shell">
-        <a className="brand" href="#inicio">raíz<span>común</span></a>
-        <div className="navlinks"><a href="#carta">Carta</a><a href="#historia">Nuestra raíz</a><a href="#visita">Visítanos</a></div>
-        <a className="pill pill-dark" href="#carta">Ver carta <span>↗</span></a>
-      </nav>
+  const [started, setStarted] = useState(false);
+  const [category, setCategory] = useState("Novedades");
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [service, setService] = useState<"pickup" | "table">("pickup");
 
-      <section id="inicio" className="hero shell">
-        <div className="hero-copy">
-          <p className="eyebrow">Specialty coffee · cocina vegetal</p>
-          <h1>Lo que nos<br /><em>conecta</em> nace aquí.</h1>
-          <p className="intro">Un espacio para comer rico, tomar buen café y encontrarnos sin prisa. De la raíz a la mesa, hecho en común.</p>
-          <div className="hero-actions"><a className="pill pill-green" href="#carta">Explorar la carta <span>↗</span></a><a className="text-link" href="#historia">Conoce nuestra historia <span>↓</span></a></div>
-        </div>
-        <div className="hero-art"><div className="sun"></div><div className="leaf leaf-a"></div><div className="leaf leaf-b"></div><div className="stamp">CAFÉ<br /><strong>con<br />raíz</strong><br />desde 2023</div><div className="art-caption">Hecho para compartir <span>✳</span></div></div>
-      </section>
+  const visibleProducts = category === "Novedades" ? products : products.filter((product) => product.category === category);
+  const add = (product: (typeof products)[number]) => setCart((current) => {
+    const found = current.find((item) => item.name === product.name);
+    return found ? current.map((item) => item.name === product.name ? { ...item, quantity: item.quantity + 1 } : item) : [...current, { ...product, quantity: 1 }];
+  });
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-      <section className="ticker"><div>CAFÉ · BRUNCH · TAPAS · SMOOTHIES · VINO · COMUNIDAD · CAFÉ · BRUNCH · TAPAS · SMOOTHIES · VINO · COMUNIDAD · </div></section>
+  if (!started) return <main className="welcome"><div className="welcome-copy"><p className="kicker">RAÍZ COMÚN · CAFETERÍA</p><p className="table-label">Mesa 12</p><h1>Un momento para<br /><em>saborear</em> sin prisa.</h1><p>Comida honesta, café de especialidad y cosas ricas para compartir.</p><button className="primary" onClick={() => setStarted(true)}>Entrar a la carta <span>↗</span></button></div><div className="welcome-art"><div className="art-sun" /><div className="art-leaf one" /><div className="art-leaf two" /><strong>hecho<br />en<br />común</strong></div><p className="bottom-note">Elige, personaliza y pide desde tu mesa.</p></main>;
 
-      <section id="carta" className="menu-section shell">
-        <div className="section-heading"><div><p className="eyebrow">Algo para cada momento</p><h2>La carta de <em>Raíz</em></h2></div><p>Ingredientes honestos, platos que abrazan<br />y café para quedarse un rato más.</p></div>
-        <div className="menu-grid"><div className="menu-tabs">{(Object.keys(menu) as Array<keyof typeof menu>).map((item) => <button key={item} className={active === item ? "active" : ""} onClick={() => setActive(item)}>{item}</button>)}</div><div className="menu-list">{menu[active].map((item, i) => <div className="menu-item" key={item}><span>0{i + 1}</span><strong>{item.split(" · ")[0]}</strong><b>{item.split(" · ")[1]}</b><small>{i % 2 ? "con ingredientes de temporada y mucho mimo" : "nuestra manera de hacerlo especial"}</small></div>)}<a className="text-link" href="#visita">Ver toda la carta <span>↗</span></a></div></div>
-      </section>
-
-      <section id="historia" className="story shell"><div className="story-image"><img src="/menu/sandwiches.jpeg" alt="Carta de Raíz Común" /><div className="image-note">La mesa<br />es de todos.</div></div><div className="story-copy"><p className="eyebrow">Nuestra raíz</p><h2>Un café con<br /><em>algo que decir.</em></h2><p>Raíz Común nace de una idea sencilla: comer bien también puede ser una forma de cuidarnos. Creamos un lugar luminoso, cercano y lleno de cosas hechas con intención.</p><p>Aquí caben las mañanas lentas, las sobremesas largas y las conversaciones que empiezan con un café.</p><a className="text-link" href="#visita">Ven a conocernos <span>↗</span></a></div></section>
-
-      <section id="visita" className="visit shell"><div><p className="eyebrow">Pásate por aquí</p><h2>Te guardamos<br /><em>un sitio.</em></h2></div><div className="visit-card"><p>RAÍZ COMÚN</p><h3>Tu lugar para<br />volver.</h3><div className="details"><span>☼ Abierto todos los días</span><span>⌖ Consulta nuestra ubicación</span><span>◎ @raizcomun</span></div><a className="pill pill-cream" href="https://www.google.com/search?q=Ra%C3%ADz+Com%C3%BAn+cafeter%C3%ADa" target="_blank">Cómo llegar <span>↗</span></a></div></section>
-
-      <footer className="footer shell"><a className="brand" href="#inicio">raíz<span>común</span></a><p>Hecho con calma, servido con cariño.</p><p>© 2026 Raíz Común</p></footer>
-    </main>
-  );
+  return <main className="order-app">
+    <header className="topbar"><a className="logo" href="#top">raíz<span>común</span></a><span>La carta de Raíz Común</span><b>Mesa 12</b></header>
+    <section className="order-hero shell" id="top"><div><p className="kicker">RAÍZ COMÚN · CARTA</p><h1>Desayunos frescos,<br /><em>café con calma.</em></h1><p>Elige, personaliza y pide desde tu mesa.</p></div><img src="/menu/cafe.jpeg" alt="Café y carta de Raíz Común" /></section>
+    <section className="shell choose"><p className="kicker">ELIGE TU MOMENTO</p><h2>¿Qué te apetece hoy?</h2><p>Todo lo que ofrece Raíz Común, sin recorrer una carta interminable.</p><div className="category-grid">{categories.map(([name, icon]) => <button key={name} className={category === name ? "selected" : ""} onClick={() => setCategory(name)}><span>{icon}</span>{name}</button>)}</div></section>
+    <div className="layout shell"><section className="catalog"><div className="catalog-head"><p className="kicker">RAÍZ COMÚN · CARTA</p><h2>{category}</h2><p>Ingredientes honestos, platos que abrazan y café para quedarse un rato más.</p></div><div className="product-grid">{visibleProducts.map((product) => <article className="product" key={product.name}><img src={product.image} alt={product.name} /><div className="product-body"><small>{product.category}</small><h3>{product.name}</h3><p>{product.description}</p><div className="product-foot"><strong>{product.price.toFixed(2).replace(".", ",")} €</strong><button onClick={() => add(product)}>Añadir</button></div></div></article>)}</div></section>
+      <aside className="cart"><p className="kicker">TU PEDIDO · MESA 12</p><h2>Revisa y finaliza</h2>{cart.length === 0 ? <p className="muted">Añade algo de la carta para empezar.</p> : <div className="cart-items">{cart.map((item) => <div className="cart-item" key={item.name}><span>{item.quantity} ×</span><strong>{item.name}</strong><b>{(item.price * item.quantity).toFixed(2).replace(".", ",")} €</b></div>)}</div>}<div className="service"><button className={service === "pickup" ? "active" : ""} onClick={() => setService("pickup")}>Recoger pedido<small>Gratis · te avisamos cuando esté listo</small></button><button className={service === "table" ? "active" : ""} onClick={() => setService("table")}>Servicio en mesa<small>+0,20 € · te lo llevamos a mesa 12</small></button></div><label>¿Quieres quitar algún ingrediente o añadir una indicación?<textarea placeholder="Ej.: sin tomate, leche de avena…" /></label><div className="total"><span>Total</span><strong>{(total + (service === "table" && cart.length ? 0.2 : 0)).toFixed(2).replace(".", ",")} €</strong></div><button className="checkout" disabled={!cart.length}>{cart.length ? "Continuar con el pedido" : "Elige productos para continuar"}</button></aside></div>
+    <footer className="footer shell"><span>Raíz Común · hecho con calma</span><span>¿Necesitas ayuda? Avísanos</span></footer>
+  </main>;
 }
